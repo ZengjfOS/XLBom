@@ -1,5 +1,17 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import xlrd
 import xlwt
+
+# excel file tile length
+titleLength = 4
+# keys index for concat
+keysIndex = [0, 1]
+# amount column index
+amountCol = 2
+# info column index
+infoCol = 3
 
 def boom():
 
@@ -13,36 +25,66 @@ def boom():
     boom = boomXL.sheet_by_index(0)
     print(boom.name, boom.nrows, boom.ncols)
 
-    outputBoom.write(0, 0, boom.cell(0, 0).value)
-    outputBoom.write(0, 1, boom.cell(0, 1).value)
-    outputBoom.write(0, 2, boom.cell(0, 2).value)
-    outputBoom.write(0, 3, boom.cell(0, 3).value)
+    # copy title
+    for index in range(titleLength):
+        outputBoom.write(0, index, boom.cell(0, index).value)
 
+    # concat key columns(keysIndex) string as key save at Set
     keySet = set()
-    for index in range(1, boom.nrows):
-        print(boom.row_values(index))
-        keyString = boom.row_values(index)[0] + "|"+ boom.row_values(index)[1]
+    for row in range(1, boom.nrows):
+        print(boom.row_values(row))
+
+        keyString = ""
+
+        # concat key
+        for keyIndex in keysIndex:
+            if len(keyString) == 0:
+                keyString = boom.row_values(row)[keyIndex]
+            else:
+                keyString += "|"+ boom.row_values(row)[keyIndex]
+
         keySet.add(keyString)
     
     print(keySet)
 
-    i = 1
+    # every key in keySet is a line
+    outRow = 1
     for key in keySet:
         amount = 0
         info = "" 
+        lineValues = []
 
-        for index in range(1, boom.nrows):
-            keyString = boom.row_values(index)[0] + "|" + boom.row_values(index)[1]
+        # out row from 1, 0 is title
+        for row in range(1, boom.nrows):
+            keyString = ""
+
+
+            # concat key
+            for keyIndex in keysIndex:
+                if len(keyString) == 0:
+                    keyString = boom.row_values(row)[keyIndex]
+                else:
+                    keyString += "|"+ boom.row_values(row)[keyIndex]
+
+            # get amount and info
             if (key == keyString):
-                amount += boom.row_values(index)[2]
-                info += "," + boom.row_values(index)[3]
+                amount += boom.row_values(row)[amountCol]
+                if len(info) == 0:
+                    info = boom.row_values(row)[infoCol]
+                else:
+                    info += "," + boom.row_values(row)[infoCol]
+            
+        # add a row value to array
+        for col in range(len(keysIndex)):
+            lineValues.append(key.split("|")[col])
+        lineValues.append(amount)
+        lineValues.append(info)
 
-        outputBoom.write(i, 0, key.split("|")[0])
-        outputBoom.write(i, 1, key.split("|")[1])
-        outputBoom.write(i, 2, amount)
-        outputBoom.write(i, 3, info)
+        # write to output boom file
+        for col in range(titleLength):
+            outputBoom.write(outRow, col, lineValues[col])
 
-        i += 1
+        outRow += 1
 
     outputBoomXL.save('output.xls')
 
