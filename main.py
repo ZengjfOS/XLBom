@@ -19,37 +19,37 @@ inputXLFileName = "module.xlsx"
 # output excel file name
 outputXLFileName = "output.xls"
 # output sheet name
-outputSheetName = "boom"
+outputSheetName = "bom"
 
-def boom():
+def bom():
 
-    boomXL = xlrd.open_workbook(filename=inputXLFileName)
+    bomXL = xlrd.open_workbook(filename=inputXLFileName)
 
-    outputBoomXL = xlwt.Workbook()
-    outputBoom = outputBoomXL.add_sheet(outputSheetName, cell_overwrite_ok = True)
+    outputBomXL = xlwt.Workbook()
+    outputBom = outputBomXL.add_sheet(outputSheetName, cell_overwrite_ok = True)
 
-    print(boomXL.sheet_names())
+    print(bomXL.sheet_names())
 
-    boom = boomXL.sheet_by_index(0)
-    print(boom.name, boom.nrows, boom.ncols)
+    bom = bomXL.sheet_by_index(0)
+    print(bom.name, bom.nrows, bom.ncols)
 
     # copy title
     for index in range(titleLength):
-        outputBoom.write(0, index, boom.cell(0, index).value)
+        outputBom.write(0, index, bom.cell(0, index).value)
 
     # concat key columns(keysIndex) string as key save at Set
     keySet = set()
-    for row in range(1, boom.nrows):
-        print(boom.row_values(row))
+    for row in range(1, bom.nrows):
+        print(bom.row_values(row))
 
         keyString = ""
 
         # concat key
         for keyIndex in keysIndex:
             if len(keyString) == 0:
-                keyString = boom.row_values(row)[keyIndex]
+                keyString = bom.row_values(row)[keyIndex]
             else:
-                keyString += "|"+ boom.row_values(row)[keyIndex]
+                keyString += "|"+ bom.row_values(row)[keyIndex]
 
         keySet.add(keyString)
     
@@ -64,26 +64,26 @@ def boom():
         keepColsValues = []
 
         # out row start 1, row 0 is title line
-        for row in range(1, boom.nrows):
+        for row in range(1, bom.nrows):
             keyString = ""
 
             # concat key
             for keyIndex in keysIndex:
                 if len(keyString) == 0:
-                    keyString = boom.row_values(row)[keyIndex]
+                    keyString = bom.row_values(row)[keyIndex]
                 else:
-                    keyString += "|"+ boom.row_values(row)[keyIndex]
+                    keyString += "|"+ bom.row_values(row)[keyIndex]
 
             # get amount and info
             if (key == keyString):
-                amount += boom.row_values(row)[amountCol]
+                amount += bom.row_values(row)[amountCol]
                 if len(info) == 0:
-                    info = boom.row_values(row)[infoCol]
+                    info = bom.row_values(row)[infoCol]
                 else:
-                    info += "," + boom.row_values(row)[infoCol]
+                    info += "," + bom.row_values(row)[infoCol]
 
             for col in keepCols:
-                keepColsValues.append(boom.row_values(row)[col])
+                keepColsValues.append(bom.row_values(row)[col])
             
         # add a row value to array
         for col in range(titleLength):
@@ -107,13 +107,13 @@ def boom():
 
                 keysIndexCount += 1
 
-        # write to output boom file
+        # write to output bom file
         for col in range(titleLength):
-            outputBoom.write(outRow, col, lineValues[col])
+            outputBom.write(outRow, col, lineValues[col])
 
         outRow += 1
 
-    outputBoomXL.save(outputXLFileName)
+    outputBomXL.save(outputXLFileName)
 
 if __name__ == '__main__':
-    boom()
+    bom()
