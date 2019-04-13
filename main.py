@@ -4,7 +4,7 @@
 import xlrd
 import xlwt
 
-# excel file tile length
+# excel file title length
 titleLength = 4
 # keys index for concat
 keysIndex = [0, 1]
@@ -12,13 +12,21 @@ keysIndex = [0, 1]
 amountCol = 2
 # info column index
 infoCol = 3
+# keep column, just match last cell program find
+keepCols = []
+# input excel file name
+inputXLFileName = "module.xlsx"
+# output excel file name
+outputXLFileName = "output.xls"
+# output sheet name
+outputSheetName = "boom"
 
 def boom():
 
-    boomXL = xlrd.open_workbook(filename="module.xlsx")
+    boomXL = xlrd.open_workbook(filename=inputXLFileName)
 
     outputBoomXL = xlwt.Workbook()
-    outputBoom = outputBoomXL.add_sheet('boom', cell_overwrite_ok = True)
+    outputBoom = outputBoomXL.add_sheet(outputSheetName, cell_overwrite_ok = True)
 
     print(boomXL.sheet_names())
 
@@ -53,11 +61,11 @@ def boom():
         amount = 0
         info = "" 
         lineValues = []
+        keepColsValues = []
 
-        # out row from 1, 0 is title
+        # out row start 1, row 0 is title line
         for row in range(1, boom.nrows):
             keyString = ""
-
 
             # concat key
             for keyIndex in keysIndex:
@@ -73,12 +81,31 @@ def boom():
                     info = boom.row_values(row)[infoCol]
                 else:
                     info += "," + boom.row_values(row)[infoCol]
+
+            for col in keepCols:
+                keepColsValues.append(boom.row_values(row)[col])
             
         # add a row value to array
-        for col in range(len(keysIndex)):
-            lineValues.append(key.split("|")[col])
-        lineValues.append(amount)
-        lineValues.append(info)
+        for col in range(titleLength):
+            keysIndexCount = 0
+            for colCheck in keysIndex:
+                if col == colCheck:
+                    lineValues.append(key.split("|")[keysIndexCount])
+
+                keysIndexCount += 1
+            
+            if col == amountCol:
+                lineValues.append(amount)
+
+            if col == infoCol:
+                lineValues.append(info)
+
+            keysIndexCount = 0
+            for colCheck in keepCols:
+                if col == colCheck:
+                    lineValues.append(keepColsValues[keysIndexCount])
+
+                keysIndexCount += 1
 
         # write to output boom file
         for col in range(titleLength):
@@ -86,7 +113,7 @@ def boom():
 
         outRow += 1
 
-    outputBoomXL.save('output.xls')
+    outputBoomXL.save(outputXLFileName)
 
 if __name__ == '__main__':
     boom()
