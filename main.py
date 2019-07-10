@@ -5,17 +5,22 @@ import xlrd
 import xlwt
 
 # excel file title length
-titleLength = 4
-# keys index for concat
-keysIndex = [0, 1]
+titleLength = 8
+# keys index for concat compare
+keysIndex = [1, 2, 5]
+# keysIndex = [0, 1]
 # amount column index
-amountCol = 2
-# info column index
-infoCol = 3
-# keep column, just match last cell program find
-keepCols = []
+amountCol = 6
+# amountCol = 2
+# concat info column index
+infoCol = 7
+# infoCol = 3
+# keep column, just match first cell program find
+keepCols = [0, 3, 4]
+# keepCols = [4]
 # input excel file name
-inputXLFileName = "module.xlsx"
+inputXLFileName = "sample/sample2.xlsx"
+# inputXLFileName = "sample/sample1.xlsx"
 # output excel file name
 outputXLFileName = "output.xls"
 # output sheet name
@@ -39,8 +44,9 @@ def bom():
 
     # concat key columns(keysIndex) string as key save at Set
     keySet = set()
+    print("key set -->")
     for row in range(1, bom.nrows):
-        print(bom.row_values(row))
+        # print(bom.row_values(row))
 
         keyString = ""
 
@@ -51,9 +57,11 @@ def bom():
             else:
                 keyString += "|"+ bom.row_values(row)[keyIndex]
 
+        print(keyString)
         keySet.add(keyString)
     
-    print(keySet)
+    print("key set <--")
+    # print(keySet)
 
     # every key in keySet is a line
     outRow = 1
@@ -62,6 +70,8 @@ def bom():
         info = "" 
         lineValues = []
         keepColsValues = []
+
+        print("-----------------------row-----------------------")
 
         # out row start 1, row 0 is title line
         for row in range(1, bom.nrows):
@@ -82,8 +92,12 @@ def bom():
                 else:
                     info += "," + bom.row_values(row)[infoCol]
 
-            for col in keepCols:
-                keepColsValues.append(bom.row_values(row)[col])
+                rowKeepColsValues = []
+                for col in keepCols:
+
+                    rowKeepColsValues.append(bom.row_values(row)[col])
+
+                keepColsValues.append(rowKeepColsValues)
             
         # add a row value to array
         for col in range(titleLength):
@@ -103,13 +117,26 @@ def bom():
             keysIndexCount = 0
             for colCheck in keepCols:
                 if col == colCheck:
-                    lineValues.append(keepColsValues[keysIndexCount])
+                    keepColValuesConcat = ""
+                    for keepColValues in keepColsValues:
+                        if (keysIndexCount == 0):
+                            keepColValuesConcat += str(int(keepColValues[keysIndexCount])) + ","
+                        else:
+                            keepColValuesConcat = str(keepColValues[keysIndexCount]) + ""
+
+                    if (keysIndexCount == 0 and len(keepColValuesConcat) > 0):
+                        lineValues.append(keepColValuesConcat[0:-1])
+                    else:
+                        lineValues.append(keepColValuesConcat)
 
                 keysIndexCount += 1
 
         # write to output bom file
         for col in range(titleLength):
             outputBom.write(outRow, col, lineValues[col])
+
+        print(lineValues)
+        print(keepColsValues)
 
         outRow += 1
 
