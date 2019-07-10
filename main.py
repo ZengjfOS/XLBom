@@ -43,7 +43,8 @@ def bom():
         outputBom.write(0, index, bom.cell(0, index).value)
 
     # concat key columns(keysIndex) string as key save at Set
-    keySet = set()
+    # keySet = set()
+    keySet = []
     print("key set -->")
     for row in range(1, bom.nrows):
         # print(bom.row_values(row))
@@ -57,8 +58,16 @@ def bom():
             else:
                 keyString += "|"+ bom.row_values(row)[keyIndex]
 
-        print(keyString)
-        keySet.add(keyString)
+
+        keyCheck = False
+        for key in keySet:
+            if keyString == key:
+                keyCheck = True
+                break;
+
+        print(keyString + ": " + str(keyCheck))
+        if keyCheck == False:    
+            keySet.append(keyString)
     
     print("key set <--")
     # print(keySet)
