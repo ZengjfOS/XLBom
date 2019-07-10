@@ -1,42 +1,94 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from os import walk
+import os
 import xlrd
 import xlwt
 
+'''
+|<-----------columns----------->|
++-------------------------------+
+| 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
++-------------------------------+
+
+title length    = 8
+key cols        = [1, 2, 5]
+keep cols       = [0, 3, 4]
+amount col      = 6
+parts col        = 7
+'''
+
 # excel file title length
-titleLength = 8
+titleLength = 0
 # keys index for concat compare
-keysIndex = [1, 2, 5]
-# keysIndex = [0, 1]
+keysString = ["Value", "Description", "[Decal]"]
+keysIndex = []
 # amount column index
-amountCol = 6
-# amountCol = 2
-# concat info column index
-infoCol = 7
-# infoCol = 3
+amountString = "Qty."
+amountCol = 0
+# concat parts column index
+partsString = "Part(s)"
+partsCol = 0
 # keep column, just match first cell program find
-keepCols = [0, 3, 4]
-# keepCols = [4]
-# input excel file name
-inputXLFileName = "sample/sample2.xlsx"
-# inputXLFileName = "sample/sample1.xlsx"
-# output excel file name
-outputXLFileName = "output.xls"
-# output sheet name
-outputSheetName = "bom"
+keepCols = []
 
-def bom():
 
-    bomXL = xlrd.open_workbook(filename=inputXLFileName)
+def analyzeTitle(cols):
+    global titleLength
+    global partsCol
+    global amountCol
+    global keysIndex
+    global keepCols
+
+    titleLength = 0
+    partsCol    = 0
+    amountCol   = 0
+    keysIndex   = []
+    keepCols    = []
+
+    titleLength = len(cols)
+    for count in range(0, titleLength):
+        print(cols[count])
+
+        if cols[count] == partsString:
+            partsCol = count
+        elif cols[count] == amountString:
+            amountCol = count
+        elif cols[count] in keysString:
+            keysIndex.append(count)
+        else:
+            keepCols.append(count)
+
+        count += 1
+
+    print(titleLength, partsCol, amountCol, keysIndex, keepCols)
+
+def getCSVFiles():
+
+    f = []
+    for (dirpath, dirnames, filenames) in walk("inputs") :
+        f.extend(filenames)
+
+    for file in f:
+        print(file)
+
+    return f
+
+def bom(inputFile, outputFile):
+
+    print(inputFile)
+    print(outputFile)
+
+    bomXL = xlrd.open_workbook(filename=inputFile)
 
     outputBomXL = xlwt.Workbook()
-    outputBom = outputBomXL.add_sheet(outputSheetName, cell_overwrite_ok = True)
-
     print(bomXL.sheet_names())
+    outputBom = outputBomXL.add_sheet(bomXL.sheet_names()[0], cell_overwrite_ok = True)
 
     bom = bomXL.sheet_by_index(0)
-    print(bom.name, bom.nrows, bom.ncols)
+    print(bom.name, bom.nrows, bom.ncols, bom.row_values(0))
+    analyzeTitle(bom.row_values(0))
 
     # copy title
     for index in range(titleLength):
@@ -53,6 +105,10 @@ def bom():
 
         # concat key
         for keyIndex in keysIndex:
+            if len(str(bom.row_values(row)[keyIndex])) == 0:
+                print("\nplease check file: " + inputFile + " row <" + str(row + 1) + "> coloum <" + str(keyIndex + 1) + "> is Empty?")
+                exit(0)
+
             if len(keyString) == 0:
                 keyString = bom.row_values(row)[keyIndex]
             else:
@@ -63,7 +119,7 @@ def bom():
         for key in keySet:
             if keyString == key:
                 keyCheck = True
-                break;
+                break
 
         print(keyString + ": " + str(keyCheck))
         if keyCheck == False:    
@@ -76,7 +132,7 @@ def bom():
     outRow = 1
     for key in keySet:
         amount = 0
-        info = "" 
+        parts = "" 
         lineValues = []
         keepColsValues = []
 
@@ -93,13 +149,13 @@ def bom():
                 else:
                     keyString += "|"+ bom.row_values(row)[keyIndex]
 
-            # get amount and info
+            # get amount and parts
             if (key == keyString):
                 amount += bom.row_values(row)[amountCol]
-                if len(info) == 0:
-                    info = bom.row_values(row)[infoCol]
+                if len(parts) == 0:
+                    parts = bom.row_values(row)[partsCol]
                 else:
-                    info += "," + bom.row_values(row)[infoCol]
+                    parts += "," + bom.row_values(row)[partsCol]
 
                 rowKeepColsValues = []
                 for col in keepCols:
@@ -120,8 +176,8 @@ def bom():
             if col == amountCol:
                 lineValues.append(amount)
 
-            if col == infoCol:
-                lineValues.append(info)
+            if col == partsCol:
+                lineValues.append(parts)
 
             keysIndexCount = 0
             for colCheck in keepCols:
@@ -149,7 +205,9 @@ def bom():
 
         outRow += 1
 
-    outputBomXL.save(outputXLFileName)
+    outputBomXL.save(outputFile)
 
 if __name__ == '__main__':
-    bom()
+    files = getCSVFiles()
+    for file in files:
+        bom("inputs/" + file, "outputs/" + os.path.splitext(file)[0] + ".xls")
