@@ -5,6 +5,7 @@ from os import walk
 import os
 import xlrd
 import xlwt
+from datetime import datetime
 
 '''
 |<-----------columns----------->|
@@ -199,7 +200,10 @@ def bom(inputFile, outputFile):
                     keepColValuesConcat = ""
                     for keepColValues in keepColsValues:
                         if (keysIndexCount == 0):
-                            keepColValuesConcat += str(int(keepColValues[keysIndexCount])) + ","
+                            if isinstance(keepColValues[keysIndexCount], int) or isinstance(keepColValues[keysIndexCount], float):
+                                keepColValuesConcat += str(int(keepColValues[keysIndexCount])) + ","
+                            else:
+                                keepColValuesConcat += str(keepColValues[keysIndexCount]) + ","
                         else:
                             keepColValuesConcat = str(keepColValues[keysIndexCount]) + ""
 
@@ -224,4 +228,4 @@ def bom(inputFile, outputFile):
 if __name__ == '__main__':
     files = getCSVFiles()
     for file in files:
-        bom("inputs/" + file, "outputs/" + os.path.splitext(file)[0] + ".xls")
+        bom("inputs/" + file, "outputs/" + os.path.splitext(file)[0] + "_" + datetime.now().strftime("%Y%m%d%H%M%S") + ".xls")
