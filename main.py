@@ -32,7 +32,16 @@ partsString = "Part(s)"
 partsCol = 0
 # keep column, just match first cell program find
 keepCols = []
+currentFilePath = ""
 
+
+def checkCellEmpty(sheet, row, col):
+
+    if len(str(sheet.row_values(row)[col])) == 0:
+        print("\nplease check file: " + currentFilePath + " row <" + str(row + 1) + "> coloum <" + str(col + 1) + "> is Empty?")
+        exit(0)
+
+    return sheet.row_values(row)[col]
 
 def analyzeTitle(cols):
     global titleLength
@@ -64,6 +73,12 @@ def analyzeTitle(cols):
 
     print(titleLength, partsCol, amountCol, keysIndex, keepCols)
 
+    if partsCol == 0 or amountCol == 0 or titleLength == 0 or len(keepCols) == 0 or len(keysIndex) < len(keysString):
+        print("\ncurrent title is: [ " + ", ".join(col for col in cols) + " ]")
+        print("Please check your keys string value: [ " + ", ".join(key for key in keysString) + " ]")
+        exit(-1)
+
+
 def getCSVFiles():
 
     f = []
@@ -73,6 +88,10 @@ def getCSVFiles():
     for file in f:
         print(file)
 
+    if len(f) == 0:
+        print("\nPlease check your input file, there is empty.")
+        exit(-2)
+
     return f
 
 def bom(inputFile, outputFile):
@@ -80,6 +99,9 @@ def bom(inputFile, outputFile):
     print(inputFile)
     print(outputFile)
 
+    global currentFilePath
+
+    currentFilePath = inputFile
     bomXL = xlrd.open_workbook(filename=inputFile)
 
     outputBomXL = xlwt.Workbook()
@@ -105,25 +127,18 @@ def bom(inputFile, outputFile):
 
         # concat key
         for keyIndex in keysIndex:
-            if len(str(bom.row_values(row)[keyIndex])) == 0:
-                print("\nplease check file: " + inputFile + " row <" + str(row + 1) + "> coloum <" + str(keyIndex + 1) + "> is Empty?")
-                exit(0)
-
+            
             if len(keyString) == 0:
-                keyString = bom.row_values(row)[keyIndex]
+                keyString = checkCellEmpty(bom, row, keyIndex)
             else:
-                keyString += "|"+ bom.row_values(row)[keyIndex]
+                keyString += "|"+ checkCellEmpty(bom, row, keyIndex)
 
-
-        keyCheck = False
-        for key in keySet:
-            if keyString == key:
-                keyCheck = True
-                break
-
-        print(keyString + ": " + str(keyCheck))
-        if keyCheck == False:    
+        if keyString not in keySet:
             keySet.append(keyString)
+        else: 
+            print("key exist in keySet, skip " + keyString + ", row <" + str(row + 1) + ">")
+
+        print(keyString)
     
     print("key set <--")
     # print(keySet)
@@ -151,15 +166,14 @@ def bom(inputFile, outputFile):
 
             # get amount and parts
             if (key == keyString):
-                amount += bom.row_values(row)[amountCol]
+                amount += checkCellEmpty(bom, row, amountCol)
                 if len(parts) == 0:
-                    parts = bom.row_values(row)[partsCol]
+                    parts = checkCellEmpty(bom, row, partsCol)
                 else:
-                    parts += "," + bom.row_values(row)[partsCol]
+                    parts += "," + checkCellEmpty(bom, row, partsCol)
 
                 rowKeepColsValues = []
                 for col in keepCols:
-
                     rowKeepColsValues.append(bom.row_values(row)[col])
 
                 keepColsValues.append(rowKeepColsValues)
