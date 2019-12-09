@@ -4,5 +4,7 @@
 
 ## install 
 
-* `pip install xlrd`
-* `pip install xlwt`
+* `pip3 install xlrd`
+* `pip3 install xlwt`
+* `pip3 install xlsx2html`
+* `pip3 install pandas`

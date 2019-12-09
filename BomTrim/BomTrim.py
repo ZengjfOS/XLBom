@@ -35,6 +35,9 @@ partsCol = 0
 keepCols = []
 currentFilePath = ""
 
+# debug info 
+debug = True
+
 
 def checkCellEmpty(sheet, row, col):
 
@@ -57,23 +60,27 @@ def analyzeTitle(cols):
     keysIndex   = []
     keepCols    = []
 
+    # get length of title
     titleLength = len(cols)
+
+    # analyze the title array
     for count in range(0, titleLength):
+        # show current col
         print(cols[count])
 
-        if cols[count] == partsString:
+        if cols[count] == partsString:      # get "parts" column number
             partsCol = count
-        elif cols[count] == amountString:
+        elif cols[count] == amountString:   # get "amount" column number
             amountCol = count
-        elif cols[count] in keysString:
+        elif cols[count] in keysString:     # get "amount" column number
             keysIndex.append(count)
-        else:
+        else:                               # other is keeping column
             keepCols.append(count)
 
-        count += 1
-
+    # show current title index infos
     print(titleLength, partsCol, amountCol, keysIndex, keepCols)
 
+    # check title index
     if partsCol == 0 or amountCol == 0 or titleLength == 0 or len(keepCols) == 0 or len(keysIndex) < len(keysString):
         print("\ncurrent title is: [ " + ", ".join(col for col in cols) + " ]")
         print("Please check your keys string value: [ " + ", ".join(key for key in keysString) + " ]")
@@ -102,15 +109,26 @@ def bom(inputFile, outputFile):
 
     global currentFilePath
 
+    # open input BOM file
     currentFilePath = inputFile
     bomXL = xlrd.open_workbook(filename=inputFile)
 
+    # open BOM output file
     outputBomXL = xlwt.Workbook()
+
+    # print sheet array in input BOM file
     print(bomXL.sheet_names())
+
+    # add same sheet[0] name to output file from input file sheet[0] name, we just analyze sheet[0]
     outputBom = outputBomXL.add_sheet(bomXL.sheet_names()[0], cell_overwrite_ok = True)
 
+    # get input file's sheet[0]
     bom = bomXL.sheet_by_index(0)
+
+    # show sheet infos, like: sheet name, sheet rows, sheet cols, first row of sheet(sheet title)
     print(bom.name, bom.nrows, bom.ncols, bom.row_values(0))
+
+    # analyze sheet title
     analyzeTitle(bom.row_values(0))
 
     # copy title
@@ -158,7 +176,7 @@ def bom(inputFile, outputFile):
         for row in range(1, bom.nrows):
             keyString = ""
 
-            # concat key
+            # concat keys
             for keyIndex in keysIndex:
                 if len(keyString) == 0:
                     keyString = bom.row_values(row)[keyIndex]
